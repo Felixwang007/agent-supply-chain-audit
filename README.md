@@ -154,3 +154,7 @@ A static grep cannot see:
 So this is triage, not security. Its job is to make "clone and run" cost 30 seconds of reading instead of a credential rotation.
 
 MIT.
+
+---
+
+Write-up with the full case study, decoded excerpts and the post-incident order of operations: [A 1,145-star CLI promised "nothing leaves your machine"](https://dev.to/felixwang007/a-1145-star-cli-promised-nothing-leaves-your-machine-it-executes-a-hidden-payload-at-import-2npd).
