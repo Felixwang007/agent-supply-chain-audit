@@ -35,6 +35,8 @@ FETCH_RE = re.compile(r"\b(urllib\.request|urlopen|requests\.get|httpx\.|fetch\(
 XOR_RE = re.compile(r"bytes\(v ?\^ ?k|lambda [A-Za-z_], ?[A-Za-z_]: ?bytes\(")
 ARRAY_RE = re.compile(r"\[\s*\d{1,3}(?:,\s*\d{1,3}){11,}\s*\]")
 IMPORTTIME_RE = re.compile(r"^[A-Za-z_][\w.]*\.[a-z_]+\(")
+# bare top-level call with no assignment, e.g. `_i44hyn5c6u()` — a favourite place to hide the trigger
+BARE_CALL_RE = re.compile(r"^[A-Za-z_]\w*\(\)\s*$")
 # dynamic dispatch hidden behind decoded names: getattr(mod, <decoded>)(...), __import__(<decoded>)
 DYNDISPATCH_RE = re.compile(r"getattr\(|__import__\((?![^)]*[\"'])" )
 
@@ -105,10 +107,12 @@ def main() -> int:
             if DYNDISPATCH_RE.search(line):
                 sections["3. obfuscation smell"].append(f"{rel}:{i} (dynamic dispatch): {line.strip()[:110]}")
 
-        if f.name in {"cli.py", "main.py", "app.py", "__main__.py", "__init__.py"}:
+        if f.name in {"cli.py", "main.py", "app.py", "__main__.py", "__init__.py"} or f.suffix == ".py":
             for i, line in enumerate(text.splitlines(), 1):
                 if IMPORTTIME_RE.match(line) and not line.startswith(("if", "def", "class")):
                     hits.append(f"{rel}:{i} runs at import time -> {line.strip()[:90]}")
+                elif BARE_CALL_RE.match(line) and not line.startswith(("#", "__", "if", "return")):
+                    hits.append(f"{rel}:{i} top-level call -> {line.strip()[:90]}")
 
     for title, rows in sections.items():
         print(f"== {title} ==")
